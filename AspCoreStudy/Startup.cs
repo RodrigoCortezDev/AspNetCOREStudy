@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Infrastructure;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,9 +17,11 @@ namespace AspCoreStudy
     {
         public void ConfigureServices(IServiceCollection services)
         {
+            var strConexao = @"Host=localhost; Port=5432; User Id=postgres; Password=a1b2c3d4; Database=Mimic;";
             services.AddDbContext<Contexto>(opt =>
             {
-                opt.UseSqlite("Data Source=Database\\Mimic.db");
+                //opt.UseSqlite("Data Source=Database\\Mimic.db");
+                opt.UseNpgsql(strConexao);
             });
             services.AddMvc();
         }
