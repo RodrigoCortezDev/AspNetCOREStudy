@@ -23,7 +23,7 @@ namespace AspCoreStudy
                 //opt.UseSqlite("Data Source=Database\\Mimic.db");
                 opt.UseNpgsql(strConexao);
             });
-            services.AddMvc();
+            services.AddMvc(ops => { ops.EnableEndpointRouting = false; });
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
