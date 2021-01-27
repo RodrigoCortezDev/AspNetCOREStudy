@@ -43,7 +43,8 @@ namespace AspCoreStudy.Controllers
         [HttpGet]
         public ActionResult Obter(int id)
         {
-            var palavra = _banco.Palavras.Find(id);
+            var palavraRepository = new PalavraRepository(_banco);
+            var palavra = palavraRepository.Obter(id);
             if (palavra == null)
                 return NotFound();
 
@@ -55,27 +56,34 @@ namespace AspCoreStudy.Controllers
         [HttpPost]
         public ActionResult Cadastrar([FromBody] Palavra palavra)
         {
-            _banco.Add(palavra);
-            _banco.SaveChanges();
-
-            return Created($"/api/pessoas/{palavra.id}",palavra);
+            try
+            {
+                var palavraRepository = new PalavraRepository(_banco);
+                palavraRepository.Cadastrar(palavra);
+                return Created($"/api/pessoas/{palavra.id}",palavra);
+            }
+            catch
+            {
+                return NotFound();
+            }
         }
 
 
         [Route("{id}")]
         [HttpPut]
-        public ActionResult Atualizar(int id, [FromBody] Palavra palavra)
+        public ActionResult Atualizar([FromBody] Palavra palavra)
         {
-
-            var palavraCtx = _banco.Palavras.AsNoTracking().FirstOrDefault(a => a.id == id);
-            if (palavraCtx == null)
+            try
+            {
+                var palavraRepository = new PalavraRepository(_banco);
+                palavraRepository.Atualizar(palavra);
+                return Ok(palavra);
+            }
+            catch
+            {
                 return NotFound();
+            }
 
-            palavra.id = id;
-            _banco.Update(palavra);
-            _banco.SaveChanges();
-
-            return Ok(palavra);
         }
 
 
@@ -83,15 +91,17 @@ namespace AspCoreStudy.Controllers
         [HttpDelete]
         public ActionResult Deletar(int id)
         {
-            var palavra = _banco.Palavras.Find(id);
-            if (palavra == null)
+            try
+            {
+                var palavraRepository = new PalavraRepository(_banco);
+                palavraRepository.Deletar(id);
+                return Ok();
+            }
+            catch 
+            {
                 return NotFound();
-
-            palavra.ativo = false;
-            _banco.Update(palavra);
-            _banco.SaveChanges();
-
-            return Ok();
+            }
+            
         }
     }
 }

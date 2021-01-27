@@ -43,23 +43,28 @@ namespace AspCoreStudy.Repositories
 
         public Palavra Obter(int id)
         {
-            throw new NotImplementedException();
+            return _banco.Palavras.Find(id);
         }
 
         public void Cadastrar(Palavra palavra)
         {
-            throw new NotImplementedException();
+            _banco.Add(palavra);
+            _banco.SaveChanges();
         }
 
         public void Atualizar(Palavra palavra)
         {
-            throw new NotImplementedException();
+            _banco.Update(palavra);
+            _banco.SaveChanges();
         }
 
 
         public void Deletar(int id)
         {
-            throw new NotImplementedException();
+            var palavra = _banco.Palavras.Find(id);
+            palavra.ativo = false;
+            _banco.Update(palavra);
+            _banco.SaveChanges();
         }
 
 
