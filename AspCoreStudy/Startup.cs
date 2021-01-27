@@ -32,7 +32,7 @@ namespace AspCoreStudy
             {
                 app.UseDeveloperExceptionPage();
             }
-
+            app.UseStatusCodePages();
             app.UseMvc();
         }
     }
