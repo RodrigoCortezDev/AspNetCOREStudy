@@ -19,8 +19,10 @@ namespace AspCoreStudy.Repositories
         }
 
 
-        public List<Palavra> ObterTodas(PalavraUrlQuery urlQuery)
+        public PaginationList<Palavra> ObterTodas(PalavraUrlQuery urlQuery)
         {
+            var lista = new PaginationList<Palavra>();
+
             var query = _banco.Palavras.AsQueryable();
             if (urlQuery.data.HasValue)
                 query = query.Where(x => x.dataCriacao.Date > urlQuery.data.Value.Date || x.dataAlteracao.Value.Date > urlQuery.data.Value);
@@ -36,30 +38,39 @@ namespace AspCoreStudy.Repositories
                 paginacao.registrosPorPagina = urlQuery.qtdePorPag ?? 10;
                 paginacao.totalRegistros = qtdeRegistrosTotalSemPaginacao;
                 paginacao.totalPaginas = (int)Math.Ceiling((double)qtdeRegistrosTotalSemPaginacao / paginacao.registrosPorPagina);
+
+                lista.Paginacao = paginacao;
             }
 
-            return query.ToList();
+            lista.AddRange(query.ToList());
+
+            return lista;
         }
 
         public Palavra Obter(int id)
         {
-            throw new NotImplementedException();
+            return _banco.Palavras.Find(id);
         }
 
         public void Cadastrar(Palavra palavra)
         {
-            throw new NotImplementedException();
+            _banco.Add(palavra);
+            _banco.SaveChanges();
         }
 
         public void Atualizar(Palavra palavra)
         {
-            throw new NotImplementedException();
+            _banco.Update(palavra);
+            _banco.SaveChanges();
         }
 
 
         public void Deletar(int id)
         {
-            throw new NotImplementedException();
+            var obj = Obter(id);
+            obj.ativo = false;
+            _banco.Update(obj);
+            _banco.SaveChanges();
         }
 
 

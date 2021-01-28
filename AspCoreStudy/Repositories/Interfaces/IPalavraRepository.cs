@@ -9,7 +9,7 @@ namespace AspCoreStudy.Repositories.Interfaces
 {
     public interface IPalavraRepository
     {
-        List<Palavra> ObterTodas(PalavraUrlQuery urlQuery);
+        PaginationList<Palavra> ObterTodas(PalavraUrlQuery urlQuery);
 
         Palavra Obter(int id);
 

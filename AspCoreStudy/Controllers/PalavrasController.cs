@@ -1,7 +1,10 @@
 ﻿using AspCoreStudy.Database;
 using AspCoreStudy.Helpers;
 using AspCoreStudy.Models;
+using AspCoreStudy.Models.DTO;
 using AspCoreStudy.Repositories;
+using AspCoreStudy.Repositories.Interfaces;
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
@@ -15,83 +18,78 @@ namespace AspCoreStudy.Controllers
     [Route("api/Palavras")]
     public class PalavrasController : ControllerBase
     {
-        private readonly Contexto _banco;
+        private readonly IPalavraRepository _repo;
+        private readonly IMapper _mapper;
 
-        public PalavrasController(Contexto banco)
+        public PalavrasController(IPalavraRepository repo, IMapper mapper)
         {
-            _banco = banco;
+            _repo = repo;
+            _mapper = mapper;
         }
 
 
-        [Route("")]
-        [HttpGet]
+        [HttpGet("{id}", Name = "ObterTodasPalavras")]
         public ActionResult ObterTodas([FromQuery] PalavraUrlQuery urlQuery)
         {
-            var palavraRepository = new PalavraRepository(_banco);
-            var lista = palavraRepository.ObterTodas(urlQuery);
+            var lista = _repo.ObterTodas(urlQuery);
             
-            //Response.Headers.Add("X-Pagination", JsonConvert.SerializeObject(paginacao));
+            Response.Headers.Add("X-Pagination", JsonConvert.SerializeObject(lista.Paginacao));
 
-            //if (paginacao.numeroPagina > paginacao.totalPaginas)
-            //    return NotFound();
+            if (lista.Paginacao.numeroPagina > lista.Paginacao.totalPaginas)
+                return NotFound();
 
             return Ok(lista.ToList());
         }
 
 
-        [Route("{id}")]
-        [HttpGet]
+        [HttpGet("{id}",Name ="ObterPalavra")]
         public ActionResult Obter(int id)
         {
-            var palavra = _banco.Palavras.Find(id);
-            if (palavra == null)
+            var obj = _repo.Obter(id);
+            if (obj == null)
                 return NotFound();
 
-            return Ok(palavra);
+            PalavraDTO palavraDTO = _mapper.Map<Palavra, PalavraDTO>(obj);
+            palavraDTO.Link = new List<LinkDTO>();
+            palavraDTO.Link.Add(new LinkDTO("Self", Url.Link("ObterPalavra", new { id = palavraDTO.id }), "GET"));
+            palavraDTO.Link.Add(new LinkDTO("Update", Url.Link("AtualizarPalavra", new { id = palavraDTO.id }), "PUT"));
+            palavraDTO.Link.Add(new LinkDTO("Delete", Url.Link("DeletarPalavra", new { id = palavraDTO.id }), "DELETE"));
+
+            return Ok(palavraDTO);
         }
 
 
-        [Route("")]
-        [HttpPost]
+        [HttpPost("",Name ="CadastrarPalavra")]
         public ActionResult Cadastrar([FromBody] Palavra palavra)
         {
-            _banco.Add(palavra);
-            _banco.SaveChanges();
-
+            _repo.Cadastrar(palavra);            
             return Created($"/api/pessoas/{palavra.id}",palavra);
         }
 
 
-        [Route("{id}")]
-        [HttpPut]
+        [HttpPut("{id}", Name = "AtualizarPalavra")]
         public ActionResult Atualizar(int id, [FromBody] Palavra palavra)
         {
+            var obj = _repo.Obter(id);
+            if (obj == null)
+                return NotFound(); 
 
-            var palavraCtx = _banco.Palavras.AsNoTracking().FirstOrDefault(a => a.id == id);
-            if (palavraCtx == null)
-                return NotFound();
-
-            palavra.id = id;
-            _banco.Update(palavra);
-            _banco.SaveChanges();
+            _repo.Atualizar(palavra);
 
             return Ok(palavra);
         }
 
 
-        [Route("{id}")]
-        [HttpDelete]
+        [HttpDelete("{id}", Name = "DeletarPalavra")]
         public ActionResult Deletar(int id)
         {
-            var palavra = _banco.Palavras.Find(id);
-            if (palavra == null)
+            var obj = _repo.Obter(id);
+            if (obj == null)
                 return NotFound();
 
-            palavra.ativo = false;
-            _banco.Update(palavra);
-            _banco.SaveChanges();
+            _repo.Deletar(id);
 
-            return Ok();
+            return NoContent();
         }
     }
 }
