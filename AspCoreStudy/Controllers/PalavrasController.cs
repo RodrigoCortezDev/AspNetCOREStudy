@@ -75,7 +75,7 @@ namespace AspCoreStudy.Controllers
                 return NotFound(); 
 
             _repo.Atualizar(palavra);
-
+            return Ok(palavra);
         }
 
 
