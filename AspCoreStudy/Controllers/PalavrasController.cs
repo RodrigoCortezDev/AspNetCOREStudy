@@ -28,21 +28,44 @@ namespace AspCoreStudy.Controllers
         }
 
 
-        [HttpGet("{id}", Name = "ObterTodasPalavras")]
+        [HttpGet("", Name = "ObterTodasPalavras")]
         public ActionResult ObterTodas([FromQuery] PalavraUrlQuery urlQuery)
         {
+            //recuperando dados
             var lista = _repo.ObterTodas(urlQuery);
-            
-            Response.Headers.Add("X-Pagination", JsonConvert.SerializeObject(lista.Paginacao));
 
-            if (lista.Paginacao.numeroPagina > lista.Paginacao.totalPaginas)
-                return NotFound();
+            //Fazendoo map e adicionando linl
+            var final = _mapper.Map<PaginationList<Palavra>, PaginationList<PalavraDTO>>(lista);
+            foreach (var palavra in final.Results)
+                palavra.Link.Add(new LinkDTO("Self", Url.Link("ObterPalavra", new { id = palavra.id }), "GET"));
 
-            return Ok(lista.ToList());
+            //Adicionando link a lista completa
+            final.Links.Add(new LinkDTO("Self", Url.Link("ObterTodasPalavras", urlQuery), "GET"));
+
+            //Se tiver paginação prepara os links de next e previous
+            if (lista.Paginacao != null)
+            {
+                Response.Headers.Add("X-Pagination", JsonConvert.SerializeObject(lista.Paginacao));
+                if (lista.Paginacao.numeroPagina > lista.Paginacao.totalPaginas)
+                    return NotFound();
+
+                if (final.Paginacao.numeroPagina + 1 <= final.Paginacao.totalPaginas)
+                {
+                    var newQueryString = new PalavraUrlQuery() { data = urlQuery.data, pagNum = urlQuery.pagNum + 1, qtdePorPag = urlQuery.pagNum };
+                    final.Links.Add(new LinkDTO("Next", Url.Link("ObterTodasPalavras", newQueryString), "GET"));
+                }
+                if (final.Paginacao.numeroPagina - 1 >= 1)
+                {
+                    var newQueryString = new PalavraUrlQuery() { data = urlQuery.data, pagNum = urlQuery.pagNum - 1, qtdePorPag = urlQuery.pagNum };
+                    final.Links.Add(new LinkDTO("Prev", Url.Link("ObterTodasPalavras", newQueryString), "GET"));
+                }
+            }
+
+            return Ok(final);
         }
 
 
-        [HttpGet("{id}",Name ="ObterPalavra")]
+        [HttpGet("{id}", Name = "ObterPalavra")]
         public ActionResult Obter(int id)
         {
             var obj = _repo.Obter(id);
@@ -50,7 +73,6 @@ namespace AspCoreStudy.Controllers
                 return NotFound();
 
             PalavraDTO palavraDTO = _mapper.Map<Palavra, PalavraDTO>(obj);
-            palavraDTO.Link = new List<LinkDTO>();
             palavraDTO.Link.Add(new LinkDTO("Self", Url.Link("ObterPalavra", new { id = palavraDTO.id }), "GET"));
             palavraDTO.Link.Add(new LinkDTO("Update", Url.Link("AtualizarPalavra", new { id = palavraDTO.id }), "PUT"));
             palavraDTO.Link.Add(new LinkDTO("Delete", Url.Link("DeletarPalavra", new { id = palavraDTO.id }), "DELETE"));
@@ -59,23 +81,47 @@ namespace AspCoreStudy.Controllers
         }
 
 
-        [HttpPost("",Name ="CadastrarPalavra")]
+        [HttpPost("", Name = "CadastrarPalavra")]
         public ActionResult Cadastrar([FromBody] Palavra palavra)
         {
-            _repo.Cadastrar(palavra);            
-            return Created($"/api/pessoas/{palavra.id}",palavra);
+            if (palavra == null)
+                return BadRequest();
+            if (!ModelState.IsValid)
+                return UnprocessableEntity();
+
+            palavra.dataCriacao = DateTime.Now;
+            palavra.ativo = true;
+            _repo.Cadastrar(palavra);
+
+            PalavraDTO palavraDTO = _mapper.Map<Palavra, PalavraDTO>(palavra);
+            palavraDTO.Link.Add(new LinkDTO("Self", Url.Link("ObterPalavra", new { id = palavraDTO.id }), "GET"));
+
+            return Created($"/api/pessoas/{palavra.id}", palavraDTO);
         }
 
 
         [HttpPut("{id}", Name = "AtualizarPalavra")]
         public ActionResult Atualizar(int id, [FromBody] Palavra palavra)
         {
+            if (palavra == null)
+                return BadRequest();
+            if (!ModelState.IsValid)
+                return UnprocessableEntity();
+
             var obj = _repo.Obter(id);
             if (obj == null)
-                return NotFound(); 
+                return NotFound();
 
+            palavra.id = id;
+            palavra.ativo = obj.ativo;
+            palavra.dataCriacao = obj.dataCriacao;
+            palavra.dataAlteracao = obj.dataAlteracao;
             _repo.Atualizar(palavra);
-            return Ok(palavra);
+
+            PalavraDTO palavraDTO = _mapper.Map<Palavra, PalavraDTO>(palavra);
+            palavraDTO.Link.Add(new LinkDTO("Self", Url.Link("ObterPalavra", new { id = palavraDTO.id }), "GET"));
+
+            return Ok(palavraDTO);
         }
 
 

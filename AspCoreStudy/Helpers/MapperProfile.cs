@@ -13,6 +13,7 @@ namespace AspCoreStudy.Helpers
         public MapperProfile()
         {
             CreateMap<Palavra, PalavraDTO>();
+            CreateMap<PaginationList<Palavra>, PaginationList<PalavraDTO>>();
         }
     }
 }

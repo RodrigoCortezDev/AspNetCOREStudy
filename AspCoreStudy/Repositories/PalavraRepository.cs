@@ -2,6 +2,7 @@
 using AspCoreStudy.Helpers;
 using AspCoreStudy.Models;
 using AspCoreStudy.Repositories.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -42,14 +43,14 @@ namespace AspCoreStudy.Repositories
                 lista.Paginacao = paginacao;
             }
 
-            lista.AddRange(query.ToList());
+            lista.Results.AddRange(query.ToList());
 
             return lista;
         }
 
         public Palavra Obter(int id)
         {
-            return _banco.Palavras.Find(id);
+            return _banco.Palavras.AsNoTracking().FirstOrDefault(x => x.id == id);
         }
 
         public void Cadastrar(Palavra palavra)

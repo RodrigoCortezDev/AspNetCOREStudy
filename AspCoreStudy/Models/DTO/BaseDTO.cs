@@ -7,6 +7,6 @@ namespace AspCoreStudy.Models.DTO
 {
     public abstract class BaseDTO
     {
-        public List<LinkDTO> Link { get; set; }
+        public List<LinkDTO> Link { get; set; } = new List<LinkDTO>();
     }
 }

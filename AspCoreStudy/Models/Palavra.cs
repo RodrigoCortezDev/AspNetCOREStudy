@@ -13,8 +13,10 @@ namespace AspCoreStudy.Models
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]        
         public int id { get; set; }
 
+        [Required]
         public string nome { get; set; }
 
+        [Required]
         public int pontuacao { get; set; }
 
         public bool ativo { get; set; }
